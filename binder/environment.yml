@@ -1,0 +1,33 @@
+name: codata-app
+
+channels:
+  - conda-forge # get things from conda-forge first
+  - defaults
+
+dependencies:
+  - python=3.7
+  # pandas and scientific python
+  - numpy
+  - numpydoc
+  - pandas>=1.0  # dataframe acccessors, attrs attribute
+  - xlrd
+  - openpyxl
+  - psutil
+  - matplotlib # note that 3.4+ is incompatible with mpltern <0.3.3
+  - pytables
+  - scipy>=1.2  # uses scipy.optimize.Bounds, added around 1.2
+  - tinydb
+  - periodictable
+  - mpltern>=0.3.1
+  - mpmath
+  - sympy
+  - joblib
+  - requests
+  # Tools
+  - jupyter
+  - jupyterlab
+  - ipykernel
+  - voila
+  - pip
+  - pip:
+    - git+git://github.com/morganjwilliams/pyrolite.git@develop#egg=pyrolite
