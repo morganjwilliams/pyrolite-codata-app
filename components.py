@@ -341,11 +341,6 @@ class Tab:
                         *frame.loc[:, plotvars].values.T,
                         c=None if c is None else process_color(c=frame[c])["c"]
                     )
-                    ax.set(
-                        xscale=["linear", "log"][self.logx.value],
-                        yscale=["linear", "log"][self.logy.value],
-                        zscale=["linear", "log"][self.logz.value],
-                    )
 
                 if c is not None:
                     cvals = frame[c]
