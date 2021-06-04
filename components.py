@@ -37,6 +37,7 @@ so that you can explore elsewhere, depending on whatever you might be comfortabl
 using.
 </p>
 </div>
+<hr>
 """
 )
 
