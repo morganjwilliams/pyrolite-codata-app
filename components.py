@@ -153,6 +153,9 @@ class Tab:
         self.logx = widgets.Checkbox(value=False, description="X")
         self.logy = widgets.Checkbox(value=False, description="Y")
         self.logz = widgets.Checkbox(value=False, description="Z")
+        self.centre_ternary = widgets.Checkbox(
+            value=False, description="Centre Ternary"
+        )
 
         self.figure = widgets.Output()
 
@@ -182,6 +185,7 @@ class Tab:
             self.logx,
             self.logy,
             self.logz,
+            self.centre_ternary,
         ]:
             p.observe(self.plotconfig_changed, names="value")
 
@@ -266,6 +270,8 @@ class Tab:
             widgets.Label("Color:"),
             self.color,
         ]
+        if self.plotmode.value == "ternary":
+            chlidren.append(self.centre_ternary)
         """ # Log scales on 3D axes seem to be broken...
         if self.plotmode.value != "ternary":
             chlidren += [
@@ -319,6 +325,9 @@ class Tab:
 
             if all([(v is not None) for v in plotvars]):
                 naming = [*plotvars]
+
+                if self.centre_ternary and self.plotmode.value == "ternary":
+                    naming.append("Centered")
                 if self.color.value is not None:
                     naming.append(self.color.value)
 
@@ -327,15 +336,25 @@ class Tab:
                 c = self.color.value
                 if self.plotmode.value != "xyz":
                     ax = fig.add_subplot()
-                    ax = frame.loc[:, plotvars].pyroplot.scatter(
-                        ax=ax,
-                        c=None if c is None else frame[c],
-                    )
                     if self.plotmode.value != "ternary":
+                        ax = frame.loc[:, plotvars].pyroplot.scatter(
+                            ax=ax,
+                            c=None if c is None else frame[c],
+                        )
                         ax.set(
                             xscale=["linear", "log"][self.logx.value],
                             yscale=["linear", "log"][self.logy.value],
                         )
+                    else:
+                        if self.centre_ternary.value:
+                            scale = frame.loc[:, plotvars].mean(axis=0)
+                        else:
+                            scale = 1
+                        ax = (frame.loc[:, plotvars] / scale).pyroplot.scatter(
+                            ax=ax,
+                            c=None if c is None else frame[c],
+                        )
+
                 else:
                     ax = fig.add_subplot(projection="3d")
                     ax.scatter(
