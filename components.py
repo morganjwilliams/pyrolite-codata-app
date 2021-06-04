@@ -354,12 +354,17 @@ class Tab:
                             ax=ax,
                             c=None if c is None else frame[c],
                         )
-
                 else:
                     ax = fig.add_subplot(projection="3d")
                     ax.scatter(
                         *frame.loc[:, plotvars].values.T,
                         c=None if c is None else process_color(c=frame[c])["c"]
+                    )
+
+                    ax.set(
+                        xlabel=self.xvar.value,
+                        ylabel=self.yvar.value,
+                        zlabel=self.zvar.value,
                     )
 
                 if c is not None:
