@@ -326,7 +326,7 @@ class Tab:
             if all([(v is not None) for v in plotvars]):
                 naming = [*plotvars]
 
-                if self.centre_ternary and self.plotmode.value == "ternary":
+                if self.centre_ternary.value and self.plotmode.value == "ternary":
                     naming.append("Centered")
                 if self.color.value is not None:
                     naming.append(self.color.value)
