@@ -448,7 +448,7 @@ class MainWindow:
     def construct_tabs(self, example=False):
         remove_tabs(self.tabs, *get_tabs(self.tabs))  # clear the tabs
         contents = (
-            [("Example Data", get_example_dataframe())]
+            [("example.csv", get_example_dataframe())]
             if example
             else self.get_contents()
         )
