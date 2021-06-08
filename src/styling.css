@@ -2,10 +2,14 @@
 .jupyter-widgets.widget-tab > .p-TabBar .p-TabBar-tab {
     flex: 0 1 300px
 }
+#description {
+    line-height: 20px !important;
+}
 .widget-radio-box {
     flex-direction: row !important;
 }
 .widget-radio-box label{
-    margin:5px !important;
+    margin: 10px !important;
+    width: 80px !important;
 }
 </style>

@@ -10,6 +10,7 @@ import pyrolite.geochem
 from pyrolite.plot.color import process_color, get_cmode
 from pyrolite.util.plot.legend import proxy_line
 from pyrolite.util.plot.style import mappable_from_values
+from pyrolite.util.plot.axes import add_colorbar
 from pyrolite.util.text import slugify
 from pyrolite.util.synthetic import normal_frame
 from pyrolite.util.log import Handle
@@ -130,7 +131,7 @@ def get_example_dataframe():
 
 # TABBED WINDOW ################################################################################################
 class Tab:
-    def __init__(self, parent, df, name, figsize=(10, 6)):
+    def __init__(self, parent, df, name):
         self.parent = parent
         self.df = df
         self.name = name
@@ -143,29 +144,52 @@ class Tab:
             options=["xy", "xyz", "ternary"], value="xy"
         )
 
-        self.xvar = widgets.Dropdown(options=[None], value=None)
-        self.yvar = widgets.Dropdown(options=[None], value=None)
-        self.zvar = widgets.Dropdown(options=[None], value=None)
-        self.color = widgets.Dropdown(options=[None], value=None)
+        self.xvar = widgets.Dropdown(
+            options=[None], value=None, layout={"width": "initial"}
+        )
+        self.yvar = widgets.Dropdown(
+            options=[None], value=None, layout={"width": "initial"}
+        )
+        self.zvar = widgets.Dropdown(
+            options=[None], value=None, layout={"width": "initial"}
+        )
+        self.color = widgets.Dropdown(
+            options=[None], value=None, layout={"width": "initial"}
+        )
 
-        self.logscale_header = widgets.Label("Log Scaling")
-        self.logx = widgets.Checkbox(value=False, description="X")
-        self.logy = widgets.Checkbox(value=False, description="Y")
-        self.logz = widgets.Checkbox(value=False, description="Z")
+        # self.logscale_header = widgets.Label("Log Scaling")
+        self.logx = widgets.Checkbox(value=False, description="Log X", indent=False)
+        self.logy = widgets.Checkbox(value=False, description="Log Y", indent=False)
+        # self.logz = widgets.Checkbox(value=False, description="Log Z")
         self.centre_ternary = widgets.Checkbox(
-            value=False, description="Centre Ternary"
+            value=False, description="Centre Ternary", indent=False
         )
 
         self.figure = widgets.Output()
 
-        self.plot_controls = widgets.VBox()
+        self.plot_variables = widgets.VBox(
+            #
+        )
+        self.plot_controls = widgets.VBox(
+            layout=widgets.Layout(display="flex", flex_flow="row wrap", width="30%"),
+        )
 
-        self.plotbox = widgets.HBox(
+        self.plotbox = widgets.VBox(
             [
-                widgets.VBox([self.plotmode, self.plot_controls]),
+                widgets.VBox(
+                    [
+                        self.plotmode,
+                        self.plot_variables,
+                        self.plot_controls,
+                    ],
+                    # layout=widgets.Layout(display="flex", flex_flow="row wrap"),
+                ),
                 self.figure,
             ],
-            layout=widgets.Layout(display="flex", flex_flow="row wrap"),
+            layout=widgets.Layout(
+                display="inline-flex",
+                flex_flow="row wrap",
+            ),
         )
 
         self.plotmode.observe(self.plotmode_changed, names="value")
@@ -184,7 +208,7 @@ class Tab:
             self.color,
             self.logx,
             self.logy,
-            self.logz,
+            # self.logz,
             self.centre_ternary,
         ]:
             p.observe(self.plotconfig_changed, names="value")
@@ -247,31 +271,45 @@ class Tab:
         self.plot()
 
     def add_2d_plot_controls(self):
-        children = [
-            widgets.Label("X:"),
-            self.xvar,
-            widgets.Label("Y:"),
-            self.yvar,
-            widgets.Label("Color:"),
-            self.color,
-            widgets.VBox([self.logscale_header, widgets.VBox([self.logx, self.logy])]),
+        self.plot_variables.children = [
+            widgets.HBox(
+                [
+                    widgets.Label("X:"),
+                    self.xvar,
+                    widgets.Label("Y:"),
+                    self.yvar,
+                    widgets.Label("Color:"),
+                    self.color,
+                ],
+                layout=widgets.Layout(display="flex", flex_flow="row wrap"),
+            ),
         ]
-
-        self.plot_controls.children = children
+        self.plot_controls.children = [
+            widgets.HBox([self.logx, self.logy], width="100px", align_self="flex-start")
+        ]
 
     def add_3d_plot_controls(self):
-        chlidren = [
-            widgets.Label("X:"),
-            self.xvar,
-            widgets.Label("Y:"),
-            self.yvar,
-            widgets.Label("Z:"),
-            self.zvar,
-            widgets.Label("Color:"),
-            self.color,
+        self.plot_variables.children = [
+            widgets.HBox(
+                [
+                    widgets.Label("X:"),
+                    self.xvar,
+                    widgets.Label("Y:"),
+                    self.yvar,
+                    widgets.Label("Z:"),
+                    self.zvar,
+                    widgets.Label("Color:"),
+                    self.color,
+                ],
+                layout=widgets.Layout(display="flex", flex_flow="row wrap"),
+            )
         ]
+
         if self.plotmode.value == "ternary":
-            chlidren.append(self.centre_ternary)
+            self.plot_controls.children = [self.centre_ternary]
+        else:
+            self.plot_controls.children = []
+
         """ # Log scales on 3D axes seem to be broken...
         if self.plotmode.value != "ternary":
             chlidren += [
@@ -283,7 +321,6 @@ class Tab:
                 ),
             ]
         """
-        self.plot_controls.children = chlidren
 
     def update_plotcontrol_options(self):
         _x, _y, _z, _color = (
@@ -312,7 +349,7 @@ class Tab:
                     if not var.value == start:
                         var.value = start
 
-    def plot(self, max_legend_length=12, figsize=(10, 6)):
+    def plot(self, max_legend_length=12, figsize=(6, 4)):
         # could be cleaner to make a new box and swap childen?
         self.figure.clear_output()
         with self.figure:
@@ -388,18 +425,29 @@ class Tab:
                                 ncol=np.ceil(len(u) / max_legend_length).astype(int),
                             )
                     elif get_cmode(cvals) == "value_array":
-                        ax.figure.colorbar(
-                            mappable_from_values(cvals),
-                            ax=ax,
-                            label=self.color.value,
-                        )
+                        mappable = mappable_from_values(cvals)
+                        if self.plotmode.value != "xyz":
+                            # handle xy and ternary colorbars
+                            colorbar = add_colorbar(
+                                mappable,
+                                ax=ax,
+                                label=self.color.value,
+                            )
+                        else:
+                            colorbar = fig.colorbar(
+                                mappable,
+                                fraction=0.05,
+                                shrink=0.9,
+                                pad=0.15,
+                                label=self.color.value,
+                            )
                     else:
                         pass
                 fig.tight_layout()
 
 
 class MainWindow:
-    def __init__(self, valid_extensions=".csv;.xls;.xlsx"):
+    def __init__(self, valid_extensions=".csv;.xls;.xlsx", css=None):
         self._layout = widgets.Layout(diplay="flex", width="80%")
         self.uploader = widgets.FileUpload(  # note that the counter for file upload is broken, but should be fixed for ipywidgets 8.0
             accept=valid_extensions,  # Accepted file extension e.g. '.txt', '.pdf', 'image/*', 'image/*,.pdf'
@@ -426,7 +474,10 @@ class MainWindow:
 
         self.box = widgets.VBox(
             [
-                widgets.Box([heading], layout=widgets.Layout(width="80%")),
+                widgets.Box(
+                    [widgets.HTML(css), heading] if css is not None else [heading],
+                    layout=widgets.Layout(width="80%"),
+                ),
                 widgets.HBox(
                     [
                         widgets.Label("Upload CSV file:"),
