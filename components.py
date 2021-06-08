@@ -1,28 +1,28 @@
 from io import BytesIO, StringIO
 import base64
 import ipywidgets as widgets
-from ipywidgets import HTML
 from IPython.display import display
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pyrolite.geochem
-from pyrolite.plot.color import process_color
+from pyrolite.plot.color import process_color, get_cmode
 from pyrolite.util.plot.legend import proxy_line
 from pyrolite.util.plot.style import mappable_from_values
 from pyrolite.util.text import slugify
-from pyrolite.plot.color import get_cmode
-
 from pyrolite.util.synthetic import normal_frame
+from pyrolite.util.log import Handle
+
+logger = Handle(__file__)
+
 
 # HEADINGS AND DOCS #####################################################################################
 
 heading = widgets.HTML(
     """
 <h1>pyrolite Compositional Data Transformer</h1>
-<div>
-<p>
+<p id="description">
 This is a prototype application for allowing quick and easy point-and-click access
 to <a href="https://pyrolite.readthedocs.io"><code>pyrolite</code></a>'s compositional
 data functionality.
@@ -33,11 +33,9 @@ but not 'Al_ppm' or 'Al2O3_wt%'). Here I've also included some basic plotting fu
 from <code>pyrolite</code> so that you can quickly explore the structure in your dataset
 and examine how compositional data transformations might be useful.
 
-Your transformed dataset can be exported in the same format you started with
-so that you can explore elsewhere, depending on whatever you might be comfortable
-using.
+Your transformed dataset can be exported in the same format you started with,
+allowing you to explore elsewhere if desired.
 </p>
-</div>
 <hr>
 """
 )
@@ -166,7 +164,8 @@ class Tab:
             [
                 widgets.VBox([self.plotmode, self.plot_controls]),
                 self.figure,
-            ]
+            ],
+            layout=widgets.Layout(display="flex", flex_flow="row wrap"),
         )
 
         self.plotmode.observe(self.plotmode_changed, names="value")
@@ -401,6 +400,7 @@ class Tab:
 
 class MainWindow:
     def __init__(self, valid_extensions=".csv;.xls;.xlsx"):
+        self._layout = widgets.Layout(diplay="flex", width="80%")
         self.uploader = widgets.FileUpload(  # note that the counter for file upload is broken, but should be fixed for ipywidgets 8.0
             accept=valid_extensions,  # Accepted file extension e.g. '.txt', '.pdf', 'image/*', 'image/*,.pdf'
             multiple=True,  # True to accept multiple files upload else False
@@ -426,7 +426,7 @@ class MainWindow:
 
         self.box = widgets.VBox(
             [
-                heading,
+                widgets.Box([heading], layout=widgets.Layout(width="80%")),
                 widgets.HBox(
                     [
                         widgets.Label("Upload CSV file:"),
@@ -438,7 +438,8 @@ class MainWindow:
                     ]
                 ),
                 self.tabs,
-            ]
+            ],
+            layout=self._layout,
         )
 
     def get_contents(self):
@@ -452,7 +453,6 @@ class MainWindow:
 
     def load_example_data(self, b):
         self.construct_tabs(example=True)
-        self.tabs.selected_index = 0  # select first tab
 
     def construct_tabs(self, example=False):
         remove_tabs(self.tabs, *get_tabs(self.tabs))  # clear the tabs
@@ -464,3 +464,4 @@ class MainWindow:
         # construct new tabs
         self._tabs = [Tab(self, df, name) for (name, df) in contents]
         add_tabs(self.tabs, *[(t.name, t.box) for t in self._tabs])
+        logger.warning(self.tabs.selected_index)  # = 1  # select first tab
