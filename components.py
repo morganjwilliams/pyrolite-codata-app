@@ -186,10 +186,7 @@ class Tab:
                 ),
                 self.figure,
             ],
-            layout=widgets.Layout(
-                display="inline-flex",
-                flex_flow="row wrap",
-            ),
+            layout=widgets.Layout(width="80%"),
         )
 
         self.plotmode.observe(self.plotmode_changed, names="value")
@@ -418,10 +415,10 @@ class Tab:
                             ax.legend(
                                 proxies.values(),
                                 proxies.keys(),
-                                fontsize=14,
+                                fontsize=12,
                                 markerscale=1.5,
                                 title=self.color.value,
-                                title_fontsize=16,
+                                title_fontsize=12,
                                 ncol=np.ceil(len(u) / max_legend_length).astype(int),
                             )
                     elif get_cmode(cvals) == "value_array":
