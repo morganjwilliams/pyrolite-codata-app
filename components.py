@@ -11,6 +11,7 @@ import pyrolite.geochem
 from pyrolite.plot.color import process_color
 from pyrolite.util.plot.legend import proxy_line
 from pyrolite.util.plot.style import mappable_from_values
+from pyrolite.util.text import slugify
 from pyrolite.plot.color import get_cmode
 
 from pyrolite.util.synthetic import normal_frame
@@ -329,9 +330,11 @@ class Tab:
                 if self.centre_ternary.value and self.plotmode.value == "ternary":
                     naming.append("Centered")
                 if self.color.value is not None:
-                    naming.append(self.color.value)
+                    naming.append("-c_{}".format(self.color.value))  # e.g. -c_Lithology
 
-                fig = plt.figure(figsize=figsize, num="-".join(naming))
+                figurename = slugify("-".join(naming))
+
+                fig = plt.figure(figsize=figsize, num=figurename)
                 frame = self.get_tfm_df()
                 c = self.color.value
                 if self.plotmode.value != "xyz":
@@ -449,6 +452,7 @@ class MainWindow:
 
     def load_example_data(self, b):
         self.construct_tabs(example=True)
+        self.tabs.selected_index = 0  # select first tab
 
     def construct_tabs(self, example=False):
         remove_tabs(self.tabs, *get_tabs(self.tabs))  # clear the tabs
